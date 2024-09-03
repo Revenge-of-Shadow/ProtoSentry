@@ -25,6 +25,13 @@
 Servo sRotation;
 Servo sTilt;
 
+enum states{
+  disabled,
+  noshooting_standby,
+  operational,
+  justified
+};
+
 enum tracks{
   NONE,
   Justice,
@@ -121,34 +128,41 @@ void setup(){
 }
 
 
-int hor_degrees       = 90;
+int hor_degrees         = 90;
 bool  subtract_degrees  = true;
 bool  alarmed           = false;
 float distance;
+byte st = disabled;
+bool prev_buttonstate   =  false;
 void loop(){ 
+  
+  if(digitalRead(DPin_Switch) != prev_buttonstate){
+    (st == justified) ? st = disabled : ++st;
+    prev_buttonstate = !prev_buttonstate;
+
+    if(st == operational){
+      signalSend(DPin_finish, delays[finish]);
+    }else if(st == disabled){
+      signalSend(DPin_move, delays[move]);
+    }
+  }
+
   //    Disabled state.
-  if(!digitalRead(DPin_Switch))
-  {
-    rotateServoR(90);
-    rotateServoT(60);
-    while(!digitalRead(DPin_Switch)){
+  if(st == disabled){
+      rotateServoR(90);
+      rotateServoT(60);
       delay(500);
       digitalWrite(DPin_Light, LOW);
       delay(500);
       digitalWrite(DPin_Light, HIGH);
-    }
-
-    
-    rotateServoT(90);
-    rotateServoR(90);
-    
-    signalSend(DPin_finish, delays[finish]);
   }
   //    Disabled state end.
   
 
-  else{
+  //    Normal (or limited) state.
+  else if (st != justified){
     rotateServoR(hor_degrees);
+    rotateServoT(90);
     //  Main loop.
     
     //  Check for the distance and set alarmed.
@@ -163,7 +177,8 @@ void loop(){
       distance = duration*0.034/2;
 
 
-    if(distance < 100.0 && distance > 40){  //  Distance below normal, become alarmed.
+    if(distance < 100.0 && distance > 40 && st == operational){  
+      //  Distance below normal, become alarmed.
       if(!alarmed){ //  The sound is played only on the moment of becoming alarmed.
         signalSend(DPin_spot, delays[spot]);
       }
@@ -174,9 +189,7 @@ void loop(){
     }
     
     if(alarmed){  //  Attack as long as alarmed.
-      rotateServoT(100);
       signalSend(DPin_shoot, delays[shoot]);
-      rotateServoT(90);
     }
     else{         //  Not alarmed, proceed with sweeping.
 
@@ -204,6 +217,15 @@ void loop(){
         }
 
     }
+  }
+  //    Normal (or limited) state end.
+
+  //    Playing "Frontier Justice" on loop.
+  else{
+    
+      rotateServoR(90);
+      rotateServoT(90);
+      digitalWrite(DPin_Justice, HIGH);
   }
 
 

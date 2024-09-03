@@ -69,9 +69,9 @@ void playAudio(const char* filename, int duration){
   Serial.print(" : playing for ");
   Serial.print(duration);
   Serial.println(" milliseconds. ");
+  tmrpcm.stopPlayback();  //  Paranoia.
   if(!duration) return;
 
-  tmrpcm.stopPlayback();  //  Paranoia.
   tmrpcm.play(filename);
   delay(duration);
   tmrpcm.stopPlayback();
