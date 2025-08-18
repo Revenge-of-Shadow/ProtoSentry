@@ -1,3 +1,5 @@
+![ProtoSentry photo](./Images/050%20ProtoSentry%2014%20Complete.jpg)
+
 "Audiofiles" directory is meant to be extracted to the SD card. That is, WAVe files must be in the root directory of the card.
 PS_Primary_board.ino is to be uploaded on the primary Arduino board.
 PS_Secondary_board.ino is to be uploaded on the secondary Arduino board.
